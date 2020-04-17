@@ -19,7 +19,8 @@ Highlights:
   
   ![Learning rate stability scheme fits neural data](learning_rate_stability.png)
 
-  *dat α so fit!*
+  *dat α so fit!*---I should learn how to do error bars and regression
+  tests. But not today!
 
 Made with :purple_heart: by Matt, but, I must say, I really don't
-feel love for jupyter notebooks. More like red firery rage.
+feel purple love for jupyter notebooks. More like red fiery rage.
