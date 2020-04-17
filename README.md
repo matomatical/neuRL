@@ -19,7 +19,7 @@ Highlights:
   
   ![Learning rate stability scheme fits neural data](learning_rate_stability.png)
 
-  *dat α!*
+  *dat α so fit!*
 
 Made with :purple_heart: by Matt, but, I must say, I really don't
 feel love for jupyter notebooks. More like red firery rage.
