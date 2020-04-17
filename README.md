@@ -18,7 +18,7 @@ Highlights:
   setting scheme which is probably optimal and seems to match what
   mice neurons like to do:
   
-  ![Learning rate stability scheme fits neural data](learning_rate_stability.png)
+  ![Learning rate stability scheme fits neural data](plots/learning_rate_stability.png)
 
   *Dat α, so fit!*---I should learn how to do error bars and regression
   tests. But not today!
