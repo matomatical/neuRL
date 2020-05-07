@@ -30,6 +30,10 @@ feel purple love for jupyter notebooks. More like red fiery rage.
   efficient (see `Imputation-Optimisation.ipynb` for my reproduction of
   their method).
 
+* `NamingAsymmetries.ipynb` for some thoughts about a good term for this tau
+  thing floating around---'attitude'? 'outlook'?---and on how it should be
+  scaled---logitally?
+
 
 ## Where to from here?
 
@@ -39,7 +43,9 @@ Some more questions:
   using the neural data?
 
 * Can the updates from 'learning rate stability' lead to an efficient
-  EDRL algorithm?
+  EDRL algorithm? I'll try in `CoatPullover.ipynb` (replication/extension
+  of DeepMind's 'Bird Dog' experiment) and then try something more serious
+  (Cartpole? Mountain Car? Pong? Parkour?)
 
 * The plots in 'aggregate RPEs' suggest some kind of (measurable?)
   nonlinear response from an ensemble of asymmetrically tuned
@@ -52,3 +58,6 @@ Other imputation strategies
 * Apparently there's a DistRL algorithm based on mixtures of gaussians.
   Since, according to Richard, gaussians are common in neurobiology, this
   could be worth looking at on the basis of its biological plausibility.
+
+* Is Maximum Entropy Inference applicable? I tried but got to a dead end
+  in `Imputation-MaxEnt.ipynb`, but it may be recoverable.
