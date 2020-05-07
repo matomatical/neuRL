@@ -48,7 +48,7 @@ class GMM:
         return sum(c * norm.pdf(x, *ps) for c, ps in mixture)
 
 
-def EXAMPLE(n=1000, coeffs=[0.1, 0.4, 0.5], params=[[7, 1], [-1, 2], [-10, 5]], seed=32):
+def EXAMPLE(n=1000, coeffs=[0.1, 0.4, 0.5], params=[[7, 1], [-1, 2], [-10, 5]], seed=32, plot=True, figsize=(13, 7)):
     # create a mixture of gaussians
     gmm = GMM(coeffs=coeffs, params=params)
 
@@ -56,18 +56,19 @@ def EXAMPLE(n=1000, coeffs=[0.1, 0.4, 0.5], params=[[7, 1], [-1, 2], [-10, 5]], 
     np.random.seed(seed=seed)
     sample = gmm.rvs(n)
 
-    # plot the sample
-    plt.figure(figsize=(13, 7))
-    plt.hist(sample, density=1, bins=100, alpha=0.5, label="sample histogram")
-    plt.scatter(sample, np.zeros_like(sample), marker="|", s=100, label="sample points")
-    # plot pdf
-    x = np.linspace(sample.min(), sample.max(), 300)
-    y = gmm.pdf(x)
-    plt.plot(x, y, color="black", label="pdf")
+    if plot:
+        # plot the sample
+        plt.figure(figsize=figsize)
+        plt.hist(sample, density=1, bins=100, alpha=0.5, label="sample histogram")
+        plt.scatter(sample, np.zeros_like(sample), marker="|", s=100, label="sample points")
+        # plot pdf
+        x = np.linspace(sample.min(), sample.max(), 300)
+        y = gmm.pdf(x)
+        plt.plot(x, y, color="black", label="pdf")
 
-    plt.xlabel("x")
-    plt.ylabel("density")
-    plt.legend()
-    plt.show()
+        plt.xlabel("x")
+        plt.ylabel("density")
+        plt.legend()
+        plt.show()
     
     return sample, x, y
