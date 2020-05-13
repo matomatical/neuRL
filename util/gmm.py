@@ -70,5 +70,8 @@ def EXAMPLE(n=1000, coeffs=[0.1, 0.4, 0.5], params=[[7, 1], [-1, 2], [-10, 5]], 
         plt.ylabel("density")
         plt.legend()
         plt.show()
-    
-    return sample, x, y
+        
+        return sample, x, y
+
+    else:
+        return sample
