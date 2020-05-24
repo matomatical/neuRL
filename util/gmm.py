@@ -12,8 +12,9 @@ class GMM:
             (standard deviation) parameters (shape: (k, 2)) 
     """
     def __init__(self, coeffs, params):
-        self.coeffs = np.array(coeffs)
-        self.params = np.array(params)
+        self.coeffs_params = np.column_stack([coeffs, params])
+        self.coeffs = self.coeffs_params[:, 0]
+        self.params = self.coeffs_params[:, 1:]
         self.K = len(coeffs)
         
     def rvs(self, n):
@@ -29,8 +30,8 @@ class GMM:
         which_gaussian = np.random.choice(self.K, size=n, p=self.coeffs)
         samples = np.ndarray(n)
         for i, (loc, scale) in enumerate(self.params):
-            which_samples = (which_gaussian==i)
-            count_samples = np.count_nonzero(which_samples)
+            which_samples = np.where(which_gaussian==i)
+            count_samples = len(which_samples[0])
             samples[which_samples] = norm.rvs(loc, scale, size=count_samples)
         return samples
 
@@ -44,11 +45,26 @@ class GMM:
         Returns:
             p (float or np.ndarray of floats): pdf at those points
         """
-        mixture = zip(self.coeffs, self.params)
-        return sum(c * norm.pdf(x, *ps) for c, ps in mixture)
+        return self.coeffs @ [norm.pdf(x,μ,σ) for μ, σ in self.params]
+    
+    def mean(self):
+        """
+        Compute model's mean.
+        
+        Returns:
+            μ (float): mean of the mixture model.
+        """
+        return self.coeffs @ self.params[:, 0]
+        
+    
+    def __str__(self):
+        return "+".join(["{:.3f}*N(μ={:.1f},σ={:.1f})".format(*d) for d in self.coeffs_params])
+    def __repr__(self):
+        return "GMM(coeffs={}, params={})".format(self.coeffs, self.params)
 
 
-def EXAMPLE(n=1000, coeffs=[0.1, 0.4, 0.5], params=[[7, 1], [-1, 2], [-10, 5]], seed=32, plot=True, figsize=(13, 7)):
+def EXAMPLE(n=1000, coeffs=[0.1, 0.4, 0.5], params=[[7, 1], [-1, 2], [-10, 5]], seed=32,
+            plot=True, figsize=(13, 7)):
     # create a mixture of gaussians
     gmm = GMM(coeffs=coeffs, params=params)
 
