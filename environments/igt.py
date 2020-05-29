@@ -125,8 +125,7 @@ class RewardSchemeR:
 
 
 class IowaGamblingTask:
-    def __init__(self, scheme="R", max_nrounds=100, split_rewards=False,
-                random_seed=None):
+    def __init__(self, scheme="R", max_nrounds=100, split_rewards=False, random_seed=None):
         self.max_nrounds = max_nrounds
         if scheme == "1" or scheme == 1:
             self.scheme = RewardScheme1()
@@ -139,7 +138,7 @@ class IowaGamblingTask:
         else:
             self.scheme = scheme # better be a reward scheme!
         self.split_rewards = split_rewards
-        self.action_space = ["A", "B", "C", "D"]
+        self.action_space = np.arange(4)
         self.reset()
     def reset(self):
         self.scheme.reset()
@@ -147,10 +146,10 @@ class IowaGamblingTask:
         return self.nrounds
     def step(self, action):
         self.nrounds += 1
-        reward = self.scheme.rewards(action)
+        reward = self.scheme.rewards("ABCD"[action])
         if not self.split_rewards:
             reward = sum(reward)
-        done   = (self.nrounds == self.max_nrounds)
+        done = (self.nrounds == self.max_nrounds)
         return self.nrounds, reward, done, {}
     def render(self, end="\r", **kwargs):
         print("Iowa Gambling Task ({}).".format(self.scheme), 
@@ -174,7 +173,7 @@ class TwoStepIowaGamblingTask:
         else:
             self.scheme = scheme # better be a reward scheme!
         self.split_rewards = split_rewards
-        self.action_space = ["A", "B", "C", "D"]
+        self.action_spaces = [np.arange(4), np.arange(1), np.arange(1), np.arange(1), np.arange(1)]
         self.state = 0
     def reset(self):
         self.scheme.reset()
@@ -183,8 +182,7 @@ class TwoStepIowaGamblingTask:
         return self.state
     def step(self, action):
         if self.state == 0:
-            a = self.action_space.index(action)
-            self.state = a+1
+            self.state = action+1
             return self.state, 0, False, {}
         else:
             # ignore action and sample reward
@@ -202,7 +200,6 @@ class TwoStepIowaGamblingTask:
     def close(self, **kwargs):
         print(**kwargs)
 
-
 if __name__ == '__main__':
     env = IowaGamblingTask(split_rewards=True, scheme="R")
     done = False
@@ -210,7 +207,6 @@ if __name__ == '__main__':
     env.render()
     while not done:
         s, r, done, _ = env.step('A')
-        time.sleep(0.01)
         env.render()
     env.close()
 
@@ -220,6 +216,5 @@ if __name__ == '__main__':
     env.render()
     while not done:
         s, r, done, _ = env.step('A')
-        time.sleep(0.01)
         env.render()
     env.close()
