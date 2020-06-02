@@ -64,10 +64,11 @@ def lerp(x0, y0, y):
 
 class NaiveImputer:
     def fit(self, ε, τ):
-        self.x = ε
+        self.ε = ε
+        self.τ = τ
         return self
     def sample(self, k):
-        return np.random.choice(self.x, k)
+        return np.random.choice(self.ε, k)
     def __repr__(self):
         return f"NaiveImputer()"
 
@@ -191,7 +192,7 @@ class InterpolatingImputer:
 
 
 class PolyLogitInterpImputer:
-    def __init__(self, x=np.linspace(-25, 10, 2000), degree=3):
+    def __init__(self, x=np.linspace(-65, 50, 2000), degree=3):
         self.degree = degree
         self.x = x
     def fit(self, ε_, τ_, i=None):
@@ -217,8 +218,9 @@ class PolyLogitInterpImputer:
 
 
 class PolyLogitImputer:
-    def __init__(self, degree=3, i=None):
+    def __init__(self, degree=3, i=None, batch_size=100):
         self.degree = degree
+        self.batch_size = batch_size
     def fit(self, ε_, τ_):
         self.ε_  = ε_
         self.τ_  = τ_
@@ -250,7 +252,12 @@ class PolyLogitImputer:
         return polyinv(self.p, sc.logit(y))
     def sample(self, k):
         y = np.random.random(k)
-        x = opt.root(lambda x: self.F(x)-y, x0=np.zeros(k), jac=lambda x: np.diag(self.f(x))).x
+        if self.batch_size is not None:
+            bs = [y[i:i+self.batch_size] for i in range(0, k, self.batch_size)]
+            xs = [opt.root(lambda x: self.F(x)-b, x0=np.zeros_like(b), jac=lambda x: np.diag(self.f(x))).x for b in bs]
+            x = np.concatenate(xs)
+        else:
+            x = opt.root(lambda x: self.F(x)-y, x0=np.zeros(k), jac=lambda x: np.diag(self.f(x))).x
         return x
     def __repr__(self):
         return f"PolyLogitImputer({self.degree=})"
