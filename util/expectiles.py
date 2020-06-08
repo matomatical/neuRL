@@ -32,6 +32,7 @@ def expectile(sample, tau):
     # 0 = (1-t)M(e) + t(m-M(e)) - e((1-t)F(e) + t(1-F(e)))
     # TODO: vectorise
     expectiles = np.ndarray(len(tau))
+
     for j, t in enumerate(tau):
         if t == 1:
             expectiles[j] = e[-1]
@@ -40,15 +41,21 @@ def expectile(sample, tau):
             expectiles[j] = e[0]
             continue
         # find point where (neg) gradient changes from positive to negative
-        # (i = index of final positive imbalance)
-        imbalance = (1-t)*M + t*(m-M) - e*((1-t)*F + t*(1-F))
-        i = (imbalance > 0).nonzero()[0][-1]
-        if imbalance[i] == 0:
-            e_star = e[i]
-        elif imbalance[i+1] == 0:
-            e_star = e[i+1]
+        # (i = index of final non-negative imbalance, may be exact expectile
+        # or may require interpolation)
+        gradient = (1-t)*M + t*(m-M) - e*((1-t)*F + t*(1-F))
+        nonneg_i = (gradient >= 0).nonzero()[0]
+        if not nonneg_i:
+            i = nonneg_i[-1]
+            if gradient[i] == 0:
+                # exact expectile
+                e_star = e[i]
+            else:
+                # interpolate
+                e_star = ((1-t)*M[i] + t*(m-M[i])) / ((1-t)*F[i] + t*(1-F[i]))
         else:
-            e_star = ((1-t)*M[i] + t*(m-M[i])) / ((1-t)*F[i] + t*(1-F[i]))
+            # all negative? numerical issue? maybe they are all the same?
+            e_star = e[-1]
         expectiles[j] = e_star
     
     return expectiles
