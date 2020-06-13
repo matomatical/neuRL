@@ -45,7 +45,7 @@ def expectile(sample, tau):
         # or may require interpolation)
         gradient = (1-t)*M + t*(m-M) - e*((1-t)*F + t*(1-F))
         nonneg_i = (gradient >= 0).nonzero()[0]
-        if not nonneg_i:
+        if nonneg_i.size > 0:
             i = nonneg_i[-1]
             if gradient[i] == 0:
                 # exact expectile
