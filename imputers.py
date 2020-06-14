@@ -261,3 +261,26 @@ class PolyLogitImputer:
         return x
     def __repr__(self):
         return f"PolyLogitImputer({self.degree=})"
+
+    
+class NonImputer:
+    def fit(self, ε_, τ_, i=None):
+        g_ = np.gradient(ε_, τ_, edge_order=2)
+        if i is None: i = ε_.size//2
+        self.μ = μ = ε_[i]
+        self.ε = ε = np.delete(ε_, i)
+        self.τ = τ = np.delete(τ_, i)
+        self.g = g = np.delete(g_, i)
+        self.N = N = -(ε - μ + τ * g * (1-2*τ))
+        self.D = D = g * (1-2*τ)**2
+        self.F = F = N / D
+        self.f = np.gradient(F, ε, edge_order=1)
+        return self
+    def sample(self, k):
+        dx = np.diff(self.ε)
+        dx = 0.5*(np.pad(dx, (1, 0), 'edge') + np.pad(dx, (0, 1), 'edge'))
+        p = np.clip(self.f, 1e-7, None) * dx
+        p = p / p.sum()
+        return np.random.choice(self.ε, k, p=p)
+    def __repr__(self):
+        return f"NonImputer()"

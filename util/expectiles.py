@@ -61,11 +61,11 @@ def expectile(sample, tau):
     return expectiles
 
 
-def tauspace(k):
+def tauspace(k, edges=False):
     """
     Return k evenly spaced floats between 0 and 1 (not inclusive),
     with the (k//2)th equal to 0.5. k must be odd.
     """
     if not k % 2: raise ValueError("k must be odd.")
-    e = 1/(2*k)
+    e = 0 if edges else 1/(2*k)
     return np.linspace(e, 1-e, k)
