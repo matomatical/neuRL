@@ -122,21 +122,23 @@ class RewardSchemeR:
     def __str__(self):
         return "Scheme R"
 
+def reward_scheme(scheme, random_seed):
+    if scheme == "1" or scheme == 1:
+        return RewardScheme1(random_seed=random_seed)
+    elif scheme == "2" or scheme == 2:
+        return RewardScheme2() # no seed
+    elif scheme == "3" or scheme == 3:
+        raise Exception("Sorry, scheme 3 implementation missing.")
+    elif scheme == "R":
+        return RewardSchemeR(random_seed=random_seed)
+    else:
+        return scheme # better be a reward scheme!
 
 
 class IowaGamblingTask:
     def __init__(self, scheme="R", max_nrounds=100, split_rewards=False, random_seed=None):
         self.max_nrounds = max_nrounds
-        if scheme == "1" or scheme == 1:
-            self.scheme = RewardScheme1()
-        elif scheme == "2" or scheme == 2:
-            self.scheme = RewardScheme2(random_seed=random_seed)
-        elif scheme == "3" or scheme == 3:
-            raise Exception("Sorry, scheme 3 implementation missing.")
-        elif scheme == "R":
-            self.scheme = RewardSchemeR(random_seed=random_seed)
-        else:
-            self.scheme = scheme # better be a reward scheme!
+        self.scheme = reward_scheme(scheme, random_seed)
         self.split_rewards = split_rewards
         self.action_space = np.arange(4)
         self.reset()
@@ -160,24 +162,13 @@ class IowaGamblingTask:
 
 
 class TwoStepIowaGamblingTask:
-    def __init__(self, scheme="R", max_nrounds=100, split_rewards=False, random_seed=None):
-        self.max_nrounds = max_nrounds
-        if scheme == "1" or scheme == 1:
-            self.scheme = RewardScheme1()
-        elif scheme == "2" or scheme == 2:
-            self.scheme = RewardScheme2(random_seed=random_seed)
-        elif scheme == "3" or scheme == 3:
-            raise Exception("Sorry, scheme 3 implementation missing.")
-        elif scheme == "R":
-            self.scheme = RewardSchemeR(random_seed=random_seed)
-        else:
-            self.scheme = scheme # better be a reward scheme!
-        self.split_rewards = split_rewards
-        self.action_spaces = [np.arange(4), np.arange(1), np.arange(1), np.arange(1), np.arange(1)]
+    def __init__(self, scheme="R", n_steps=2, random_seed=None):
+        self.n_steps = n_steps
+        self.scheme = reward_scheme(scheme, random_seed)
+        self.action_spaces = [np.arange(4)] + [np.arange(1)]*4*(self.n_steps-1)
         self.state = 0
     def reset(self):
         self.scheme.reset()
-        self.nrounds = 0
         self.state = 0
         return self.state
     def step(self, action):
@@ -186,16 +177,17 @@ class TwoStepIowaGamblingTask:
             return self.state, 0, False, {}
         else:
             # ignore action and sample reward
-            reward = self.scheme.rewards("ABCD"[self.state-1])
-            if not self.split_rewards:
-                reward = sum(reward)
-            self.nrounds += 1
-            done = (self.nrounds == self.max_nrounds)
-            self.state = 0
-            return 0, reward, done, {}
+            self.state += 4
+            done = False
+            reward = 0
+            if self.state > 4 * (self.n_steps - 1):
+                # end of task!
+                done = True
+                reward = sum(self.scheme.rewards("ABCD"[(self.state-1) % 4]))
+                self.state = 0
+            return self.state, reward, done, {}
     def render(self, end="\r", **kwargs):
-        print("Two-step Iowa Gambling Task ({}).".format(self.scheme), 
-              "{:3d} / {:3d} rounds complete.".format(self.nrounds, self.max_nrounds),
+        print("Two-step Iowa Gambling Task ({}) state {}.".format(self.scheme, self.state),
               end=end, **kwargs)
     def close(self, **kwargs):
         print(**kwargs)
