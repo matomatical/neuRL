@@ -1,3 +1,9 @@
+"""
+Function to compute expectiles of a sample.
+
+Matthew Farrugia-Roberts, 2020
+"""
+
 import numpy as np
 
 

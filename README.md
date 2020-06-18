@@ -6,14 +6,11 @@ of expectiles, distributional reinforcement learning, and the brain.
 Made with :purple_heart: by Matt, but, I must say, I really don't
 feel purple love for jupyter notebooks. More like red fiery rage.
 
+See also [my expectiles repo](https://github.com/matomatical/expectiles)
+for an implementation of my method for efficiently computing sample
+expectiles.
 
 ## Highlights:
-
-* `expectiles.py` for an implementation of an efficient method of
-  calculating expectiles that seems to be much much much faster
-  than using a scipy optimisation routine, and the notebook
-  `CalculatingExpectiles.ipynb` for a motivation of this method.
-  (WARNING: the github formula rendering doesn't work well).
 
 * `LearningRateStability.ipynb` for a tutorial on online computation
   of means and expectiles, including a hypothetical asymmetric rate
@@ -22,13 +19,15 @@ feel purple love for jupyter notebooks. More like red fiery rage.
   
   ![Learning rate stability scheme fits neural data](plots/learning_rate_stability.png)
 
-  *Dat α, so fit!*---I should learn how to do error bars and regression
+  What a fit!---I should learn how to do error bars and regression
   tests. But not today!
   
-* `Imputation-Direct.ipynb` for an alternative to DeepMind's optimisation-
-  based imputation method, which should be vastly more computationally
-  efficient (see `Imputation-Optimisation.ipynb` for my reproduction of
-  their method).
+* `Imputation-Direct.ipynb` and `Imputation-PolyLogit` for some attempts at
+  an alternative to DeepMind's optimisation-based imputation strategy,
+  which should be vastly more computationally efficient but are still having
+  some trouble with accuracy and stability
+  (see `Imputation-Optimisation.ipynb` for my reproduction of their method),
+  and `ImputationStability.ipynb` for some demonstrations of these methods.
 
 * `NamingAsymmetries.ipynb` for some thoughts about a good term for this tau
   thing floating around---'attitude'? 'outlook'?---and on how it should be
@@ -40,7 +39,8 @@ feel purple love for jupyter notebooks. More like red fiery rage.
 Some more questions:
 
 * Can the direct imputation method lead to a nicer 'decoding' demonstration
-  using the neural data?
+  using the neural data? It seems the optimisation-based method is actually
+  a lot more robust to this kind of noisy data.
 
 * Can the updates from 'learning rate stability' lead to an efficient
   EDRL algorithm? I'll try in `CoatPullover.ipynb` (replication/extension
