@@ -1,70 +1,93 @@
 import numpy as np
 
 
-def expectile(sample, tau):
+def expectile(sample, tau, sorted_sample=False):
     """
     Compute the tau-th expectile from a sample.
 
     Parameters:
         sample (array-like): sample to compute expectile of. Should have
-            multiple (>1) distinct points.
+            multiple (>1) distinct points. If all the points are the same,
+            all of the expectiles are just equal to the points.
         tau (float or array-like of floats): asymmetric ratio (or ratios)
             of expectiles to compute, each between 0 and 1 inclusive.
+        sorted_sample (bool): Mark sample as already sorted. Default: False,
+            assumes sample is not sorted, sorts sample into a new array.
 
     Returns:
-        expectiles (np.ndarray): vector of computed expectiles.
+        expectiles (float or np.ndarray of floats): vector of computed
+            expectiles (or scalar if tau was scalar).
     """
-    if np.isscalar(tau): tau = [tau]
+    # preprocess input
+    scalar = np.isscalar(tau)
+    if scalar:
+        tau = np.array([tau])
+    else:
+        tau = np.asarray(tau)
+    if np.any(tau < 0) or np.any(tau > 1):
+        raise ValueError("All tau values must be between 0 and 1.")
 
-    sorted_sample = np.sort(sample)
-    n = sorted_sample.size
-    # sample cumulative density function
-    F = np.arange(1, n+1)/n
-    # sample partial moment function
-    M = np.cumsum(sorted_sample)/n
-    # mean
-    m = M[-1]
-    # 'candidate' expectiles (points where M[i], F[i] change)
-    e = sorted_sample
+    # sort sample if necessary
+    if sorted_sample:
+        x = np.asarray(sample)
+    else:
+        x = np.sort(sample)
     
-    # for each tau t:
-    # find the e where this equation is satisfied:
-    # 0 = (1-t)M(e) + t(m-M(e)) - e((1-t)F(e) + t(1-F(e)))
-    # TODO: vectorise
-    expectiles = np.ndarray(len(tau))
+    # precompute F and M at key points
+    # (for stability, omit division by N)
+    N = x.size
+    # N * sample cumulative density function
+    F = np.arange(N) + 1
+    # N * sample partial moment function
+    M = np.cumsum(x)
+    # N * sample mean
+    MN = M[-1]
+    # N * 1
+    FN = N # = F[-1]
 
-    for j, t in enumerate(tau):
-        if t == 1:
-            expectiles[j] = e[-1]
-            continue
-        if t == 0:
-            expectiles[j] = e[0]
-            continue
-        # find point where (neg) gradient changes from positive to negative
-        # (i = index of final non-negative imbalance, may be exact expectile
-        # or may require interpolation)
-        gradient = (1-t)*M + t*(m-M) - e*((1-t)*F + t*(1-F))
-        nonneg_i = (gradient >= 0).nonzero()[0]
-        if nonneg_i.size > 0:
-            i = nonneg_i[-1]
-            if gradient[i] == 0:
-                # exact expectile
-                e_star = e[i]
-            else:
-                # interpolate
-                e_star = ((1-t)*M[i] + t*(m-M[i])) / ((1-t)*F[i] + t*(1-F[i]))
-        else:
-            # all negative? numerical issue? maybe they are all the same?
-            e_star = e[-1]
-        expectiles[j] = e_star
-    
-    return expectiles
+    # prepare output array
+    eps = np.ndarray(len(tau))
+
+    # solve all edge cases first
+    eps[tau == 0] = x[0]
+    eps[tau == 1] = x[-1]
+
+    # then solve remaining cases
+    j = np.where((tau != 0) & (tau != 1))
+    t = tau[j][:, np.newaxis]
+    A = -((1-2*t)*F + t*FN)
+    B =  ((1-2*t)*M + t*MN)
+    G = A*x + B
+    # find the segment with G_i >= 0 and G_i+1 < 0:
+    # (pad True should catch case when all are same)
+    i = np.where((G >= 0)
+        & np.pad(G[:, 1:] < 0, [(0, 0), (0, 1)], constant_values=True))
+    # interpolate to get the root (unless it's an exact sample point)
+    eps[j] = np.where(G[i] == 0, x[i[1]], -B[i]/A[i])
+
+    # postprocess and return output
+    if scalar:
+        return eps[0]
+    else:
+        return eps
 
 
 def tauspace(k, edges=False):
     """
-    Return k evenly spaced floats between 0 and 1 (not inclusive),
-    with the (k//2)th equal to 0.5. k must be odd.
+    Construct an array of `k` evenly spaced floats between 0 and 1
+    (not inclusive, unless `edges` is set to True).
+    `k` must be odd, so the `k//2`th element of the array is 0.5.
+    
+    Parameters:
+        k (int): Number of floats to include. Must be odd.
+        edges (bool): Whether to include edges. If so, the returned
+            array starts at 0 and ends at 1. If not, the returned
+            array starts and ends half an interval away from 0 and 1,
+            compared to the difference between successive elements.
+            Default: False.
+    
+    Returns:
+        taus (np.ndarray): array of evenly spaced floats. Shape: (k,).
     """
     if not k % 2: raise ValueError("k must be odd.")
     e = 0 if edges else 1/(2*k)
