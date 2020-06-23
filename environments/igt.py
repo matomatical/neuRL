@@ -122,6 +122,7 @@ class RewardSchemeR:
     def __str__(self):
         return "Scheme R"
 
+
 def reward_scheme(scheme, random_seed):
     if scheme == "1" or scheme == 1:
         return RewardScheme1(random_seed=random_seed)

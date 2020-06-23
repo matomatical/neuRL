@@ -52,24 +52,30 @@ def expectile(sample, tau, sorted_sample=False):
     FN = N # = F[-1]
 
     # prepare output array
-    eps = np.ndarray(len(tau))
+    eps = np.empty_like(tau)
 
     # solve all edge cases first
     eps[tau == 0] = x[0]
     eps[tau == 1] = x[-1]
 
     # then solve remaining cases
-    j = np.where((tau != 0) & (tau != 1))
-    t = tau[j][:, np.newaxis]
-    A = -((1-2*t)*F + t*FN)
-    B =  ((1-2*t)*M + t*MN)
+    k = np.where((tau != 0) & (tau != 1))
+    t = tau[k][:, np.newaxis]
+    # compute line segments
+    A = -((1-2*t)*F + t*FN) # slopes
+    B =  ((1-2*t)*M + t*MN) # offsets
     G = A*x + B
-    # find the segment with G_i >= 0 and G_i+1 < 0:
-    # (pad True should catch case when all are same)
-    i = np.where((G >= 0)
-        & np.pad(G[:, 1:] < 0, [(0, 0), (0, 1)], constant_values=True))
-    # interpolate to get the root (unless it's an exact sample point)
-    eps[j] = np.where(G[i] == 0, x[i[1]], -B[i]/A[i])
+    # for each i find the segment with G_i,j >= 0 and G_i,j+1 < 0:
+    i, j = np.where((G >= 0)[:, :-1] & (G < 0)[:, 1:])
+    # due to numerical issues there may not be eactly one j for each
+    # possible i. if no j for some i, use N-1. if many j, use last one.
+    I = np.arange(t.size)
+    J = np.full_like(I, N-1)
+    J[i] = j # overwrite all but the last j or the default for each i
+    
+    # interpolate to get the root (unless it's an exact sample point,
+    # in which case we do better by just taking the sample point itself.)
+    eps[k] = np.where(G[I, J] == 0, x[J], -B[I, J]/A[I, J])
 
     # postprocess and return output
     if scalar:
@@ -78,15 +84,15 @@ def expectile(sample, tau, sorted_sample=False):
         return eps
 
 
-def tauspace(k, edges=False):
+def tauspace(k, endpoints=False):
     """
     Construct an array of `k` evenly spaced floats between 0 and 1
-    (not inclusive, unless `edges` is set to True).
+    (not inclusive, unless `endpoints` is set to True).
     `k` must be odd, so the `k//2`th element of the array is 0.5.
     
     Parameters:
         k (int): Number of floats to include. Must be odd.
-        edges (bool): Whether to include edges. If so, the returned
+        endpoints (bool): Whether to include edges. If so, the returned
             array starts at 0 and ends at 1. If not, the returned
             array starts and ends half an interval away from 0 and 1,
             compared to the difference between successive elements.
@@ -96,5 +102,5 @@ def tauspace(k, edges=False):
         taus (np.ndarray): array of evenly spaced floats. Shape: (k,).
     """
     if not k % 2: raise ValueError("k must be odd.")
-    e = 0 if edges else 1/(2*k)
+    e = 0 if endpoints else 1/(2*k)
     return np.linspace(e, 1-e, k)
