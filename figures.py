@@ -6,6 +6,8 @@ preparing the first version of this code.
 [1]: jwalton.info/Embed-Publication-Matplotlib-Latex/
 """
 import string
+
+import numpy as np
 import matplotlib.pyplot as plt
 
 
@@ -69,5 +71,5 @@ def title_subplots(axes, titles=None, **kwargs):
     if titles is None:
         titles = map("({})".format, string.ascii_lowercase)
     # place the titles
-    for axis, title in zip(axes.flat, titles):
+    for axis, title in zip(np.atleast_1d(axes).flat, titles):
         axis.set_title(title, **kwargs)
